@@ -9,5 +9,11 @@ $(GIT_HOOKS):
 	@scripts/install-git-hooks
 	@echo
 
+cache-miss: main
+	perf stat --repeat 100 \
+		-e cache-misses,cache-references,instructions,cycles \
+		./main
+
+
 clean:
 	$(RM) main
