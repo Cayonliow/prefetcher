@@ -9,12 +9,15 @@
 
 #include <immintrin.h>
 
+#ifndef TEST
 #define TEST_W 4096
 #define TEST_H 4096
+#endif
 
-/* provide the implementations of naive_transpose,
- * sse_transpose, sse_prefetch_transpose
- */
+#ifdef TEST
+#define TEST_W 4
+#define TEST_H 4
+#endif
 
 #include "impl.c"
 
@@ -42,43 +45,45 @@ int main()
         for (int x = 0; x < TEST_W; x++)
             *(src + y * TEST_W + x) = rand();
 
+    int *out = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
+
+    int *testtest = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
+    sse_prefetch_transpose(src, testtest, TEST_W, TEST_H);
+
+
 #ifdef SSE_P
-    int *out0 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
     clock_gettime(CLOCK_REALTIME, &start);
-    sse_prefetch_transpose(src, out0, TEST_W, TEST_H);
+    sse_prefetch_transpose(src, out, TEST_W, TEST_H);
     clock_gettime(CLOCK_REALTIME, &end);
     //printf("sse prefetch: \t %ld us\n", diff_in_us(start, end));
-    free(out0);
 #endif
 
 #ifdef SSE
-    int *out1 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
     clock_gettime(CLOCK_REALTIME, &start);
-    sse_transpose(src, out1, TEST_W, TEST_H);
+    sse_transpose(src, out, TEST_W, TEST_H);
     clock_gettime(CLOCK_REALTIME, &end);
     //printf("sse: \t\t %ld us\n", diff_in_us(start, end));
-    free(out1);
 #endif
 
 #ifdef NAIVE
-    int *out2 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
     clock_gettime(CLOCK_REALTIME, &start);
-    naive_transpose(src, out2, TEST_W, TEST_H);
+    naive_transpose(src, out, TEST_W, TEST_H);
     clock_gettime(CLOCK_REALTIME, &end);
     //printf("naive: \t\t %ld us\n", diff_in_us(start, end));
-    free(out2);
 #endif
 
 #ifdef AVX
-    int *out3 = (int *) malloc(sizeof(int) * TEST_W * TEST_H);
     clock_gettime(CLOCK_REALTIME, &start);
-    avx_transpose(src, out3, TEST_W, TEST_H);
+    avx_transpose(src, out, TEST_W, TEST_H);
     clock_gettime(CLOCK_REALTIME, &end);
-    printf("avx: \t\t %ld us\n", diff_in_us(start, end));
-    free(out3);
+    //printf("avx: \t\t %ld us\n", diff_in_us(start, end));
+#endif
+
+#ifdef VERITY
+    assert(0 == memcmp(testtest, out, TEST_W * TEST_H * sizeof(int)) && "Verification Fails");
 #endif
 
     free(src);
-
+    free(out);
     return 0;
 }

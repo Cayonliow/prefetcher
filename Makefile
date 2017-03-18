@@ -32,6 +32,8 @@ cache-miss-avx: main
 	perf stat --repeat 100 \
 		-e cache-misses,cache-references,L1-dcache-load-misses,L1-dcache-store-misses,L1-dcache-prefetch-misses,L1-icache-load-misses \
 		./cache-miss-avx
-
+test-avx: main
+	$(CC) $(CFLAGS) -DAVX -DTEST -DVERITY -DNAME=\"test-avx\" -o test-avx main.c
+		./test-avx
 clean:
 	$(RM) main
